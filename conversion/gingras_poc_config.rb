@@ -44,15 +44,14 @@ to_field "language_ssim", extract_marc("008[35-37]:041a:041b:041d:041e:041f:041g
 # ISBN et autres numéros ou codes
 to_field "isbn_tsim", extract_marc("020a")
 to_field "publisher_number_ssim", extract_marc("028abq")
-to_field "music_form_ssim", extract_marc("047a") # TODO: translation_map
-to_field "interpret_ssim", extract_marc("048a") # TODO: translation_map
-to_field "soliste_ssim", extract_marc("048b") # TODO: translation_map
+to_field "music_form_ssim", extract_marc("047a"), translation_map("gingras-poc-formes-musicales")
+to_field "interpret_ssim", extract_marc("048a"), translation_map("gingras-poc-instruments")
+to_field "soliste_ssim", extract_marc("048b"), translation_map("gingras-poc-instruments")
 
 # Cotes (on reprend la logique du marc_indexer de Blakclight)
 to_field "lc_callnum_ssm", extract_marc("050ab", :first => true)
 
 first_letter = lambda {|rec, acc| acc.map!{|x| x[0]} }
-# TODO to_field "lc_1letter_ssim", extract_marc("050ab", :first => true), translation_map("callnumber_map")
 to_field "lc_1letter_ssim", extract_marc("050ab", :first => true)
 
 alpha_pat = /\A([A-Z]{1,3})\d.*\Z/
@@ -70,14 +69,14 @@ to_field "lc_b4cutter_ssim", extract_marc("050a"), first_only
 # to_field "format", get_format
 
 # Le MARC en XML (pour la vue catalogueur)
-#to_field "marc_ss", serialized_marc(:format => "xml")
+to_field "marc_ss", serialized_marc(:format => "xml")
 
 # Le champ plein texte
 # Si on ne fait pas la boucle avec le join on a une occurence
 # du champ pour chaque champ MARC
-#to_field "all_text_timv", extract_all_marc_values do |r, acc|
-#  acc.replace [acc.join(' ')]
-#end
+to_field "all_text_timv", extract_all_marc_values do |r, acc|
+  acc.replace [acc.join(' ')]
+end
 
 
 
@@ -112,7 +111,6 @@ to_field "collection_tsim", extract_marc("490")
 
 
 # Les zones de description matérielle (3XX)
-# TODO: voir si on doit les indexer (ils sont dans le plein texte)
 # Ignorés: 351, 365, 370, 380
 
 # Description matérielle
@@ -123,48 +121,36 @@ to_field "material_type_ssm", extract_marc("300")
 to_field "duration_ssm", extract_marc("306a")
 
 # Type de contenu
-# TODO: on sort le code, faire une translation_map lorsqu'on
-# aura la liste des codes utilisés
-# Voir https://www.loc.gov/standards/valuelist/rdacontent.html
-to_field "content_type_ssm", extract_marc("336b")
+# Voir https://www.marc21.ca/M21/COD/RDA-CON-MARC.html
+to_field "content_type_ssim", extract_marc("336b"), translation_map("gingras-poc-types-contenus")
 
 # Type de média
-# TODO: on sort le code, faire une translation_map lorsqu'on
-# aura la liste des codes utilisés
-# Voir https://www.loc.gov/standards/valuelist/rdamedia.html
-to_field "media_type_ssm", extract_marc("337b")
+# https://www.marc21.ca/M21/COD/RDA-MED-MARC.html
+to_field "media_type_ssim", extract_marc("337b"), translation_map("gingras-poc-types-medias")
 
 # Type de support
-# TODO: on sort le code, faire une translation_map lorsqu'on
-# aura la liste des codes utilisés
-# Voir https://www.loc.gov/standards/valuelist/rdacarrier.html
-to_field "carrier_type_ssm", extract_marc("338b")
+# Voir https://www.marc21.ca/M21/COD/RDA-SM-MARC.html
+to_field "carrier_type_ssim", extract_marc("338b"), translation_map("gingras-poc-types-supports")
 
 # Support matériel
-# TODO: souvent de l'anglais pour $a, voir si on traduit
-to_field "physical_medium_ssm", extract_marc("340abdfg")
+to_field "physical_medium_ssm", extract_marc("340abdfg", :trim_punctuation => true)
 
 # Caractéristiques sonores
-# TODO: souvent de l'anglais pour $a, voir si on traduit
 to_field "sound_characteristics_ssm", extract_marc("344abcdefghif")
 
 # Caractéristiques vidéos
-# TODO: souvent de l'anglais pour $a, voir si on traduit
 to_field "video_characteristics_ssm", extract_marc("346ab")
 
 # Caractéristiques de fichier numérique
-# TODO: souvent de l'anglais pour $a, voir si on traduit
 to_field "file_characteristics_ssm", extract_marc("347abcdef")
 
 # Caractéristiques de la musique notée
-# TODO: parfois en anglais, parfois en français
 to_field "notated_music_characteristics_ssm", extract_marc("348abcd")
 
 # Distribution d'exécution d'une oeuvre
-# TODO: on va tout mettre ici, mais ça pourrait être intéressant
-# de déparer les sous-champs, pour isoler des solistes, etc.
-# TODO: si on regroupe, ce n'est pas très intelligible
-to_field "medium_performance_ssm", extract_marc("382abcdefghifklmnopqrstuv")
+to_field "medium_performance_ssim", extract_marc("382a")
+to_field "medium_performance_ssim", extract_marc("382b")
+to_field "medium_performance_ssim", extract_marc("382d")
 
 # Numéro d'identification de l'oeuvre musicale
 to_field "numeric_designation_ssm", extract_marc("383abcde")
@@ -173,26 +159,87 @@ to_field "numeric_designation_ssm", extract_marc("383abcde")
 to_field "key_ssm", extract_marc("384a")
 
 # Caractéristiques du créateur
-to_field "creator_characteristics_ssm", extract_marc("386abimn")
+to_field "creator_characteristics_ssim", extract_marc("386abimn")
 
 to_field "title_series_ssim", extract_marc("440a:490a:800abcdt:400abcd:810abcdt:410abcd:811acdeft:411acdef:830adfgklmnoprst:760ast:762ast"), trim_punctuation
 to_field "series_facet_ssim", marc_series_facet
 
-
 # Les vedettes principales (auteurs, ..., zones 1XX)
-# TODO: le $e ou le $4 donnent un rôle à l'auteur (compositeur, ...),
-# on pourrait en faire des index spécifiques
 
 to_field "author_tsim", extract_marc("100abcdgqu:110abcdgnu:111acdegjnqu:130afgklmnoprs", :trim_punctuation => true)
 to_field "author_ssm", extract_marc("100abcdgqu:110abcdgnu:111acdegjnqu:130afgklmnoprs", :trim_punctuation => true)
 to_field "author_si", marc_sortable_author
 
+# On va aller chercher quelques rôles particuliers
+# TODO: il y en a en théorie beaucoup plus, voir ceux qui sont
+# utilisés et intéressants
+# Voir https://www.marc21.ca/M21/COD/REL-C.html
+
+# Les compositeurs auront $e=composer et/ou $4=cmp
+to_field "author_composer_ssim" do |rec, acc|
+  rec.fields("100").each do |f|
+    d_e = f["e"]
+    d_4 = f["4"]
+    if d_e == "composer" || d_4 == "cmp"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+  rec.fields("110").each do |f|
+    d_e = f["e"]
+    d_4 = f["4"]
+    if d_e == "composer" || d_4 == "cmp"
+      acc << [f["a"], f["b"]].join(" ")
+    end
+  end
+  rec.fields("700").each do |f|
+    d_e = f["e"]
+    d_4 = f["4"]
+    if d_e == "composer" || d_4 == "cmp"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+  rec.fields("710").each do |f|
+    d_e = f["e"]
+    d_4 = f["4"]
+    if d_e == "composer" || d_4 == "cmp"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+end
+
+# Les interprètes auront $4=prf
+to_field "author_interpret_ssim" do |rec, acc|
+  rec.fields("100").each do |f|
+    d_4 = f["4"]
+    if d_4 == "prf"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+  rec.fields("110").each do |f|
+    d_4 = f["4"]
+    if d_4 == "prf"
+      acc << [f["a"], f["b"]].join(" ")
+    end
+  end
+  rec.fields("700").each do |f|
+    d_4 = f["4"]
+    if d_4 == "prf"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+  rec.fields("710").each do |f|
+    d_4 = f["4"]
+    if d_4 == "prf"
+      acc << [f["a"], f["d"]].join(" ")
+    end
+  end
+end
+
 # Les vedettes secondaires (70X - 75X)
 
-# D'abord comme auteurs génériques comme tels
+# Auteurs génériques comme tels
 to_field "author_addl_tsim", extract_marc("700abcegqu:710abcdegnu:711acdegjnqu:720a:730agiklmnopr:740anp:752adf", :trim_punctuation => true)
 
-# TODO: extraire les rôles précis des auteurs secondaires avec $4
 
 # Les sujets (6XX)
 
