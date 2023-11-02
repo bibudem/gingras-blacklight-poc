@@ -1,0 +1,7 @@
+__default__: "__passthrough__"
+s: "Audio"
+n: "Sans médiation"
+v: "Vidéo"
+a: "Autre"
+c: "Informatique"
+g: "Projeté"

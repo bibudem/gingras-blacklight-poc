@@ -1,0 +1,7 @@
+__default__: "__passthrough__"
+prm: "Musique exécutée"
+ntm: "Musique notée"
+txt: "Texte"
+tdi: "Image animée bidimensionnelle"
+spw: "Parole énoncée"
+sti: "Image fixe"
