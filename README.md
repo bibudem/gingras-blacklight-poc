@@ -14,11 +14,22 @@ L'application permet de faire des recherches dans ce contenu et d'afficher les n
 
 Il s'agit d'une application [Blacklight](http://projectblacklight.org). Une connaissance de cet outil ou de Ruby / Rails n'est pas essentielle, mais utile.
 
+### Installation
+
 **Solr**
-: Le moteur de recherche [Solr](https://solr.apache.org/guide/solr/latest/deployment-guide/installing-solr.html) est utilié par Blacklight. Vous devez l'installer et noter l'adresse pour accéder au serveur. Par défaut, c'est `http://localhost:8983/solr`. Cette preuve de concept a été créée avec la version 9.3 de Solr.
+: le moteur de recherche [Solr](https://solr.apache.org/guide/solr/latest/deployment-guide/installing-solr.html) est utilié par Blacklight. Vous devez l'installer et noter l'adresse pour accéder au serveur. Par défaut, c'est `http://localhost:8983/solr`. Cette preuve de concept a été créée avec la version 9.3 de Solr.
 
 **Ruby, Rails, Java, nodejs, yarn**
-: Le [quickstart](https://github.com/projectblacklight/blacklight/wiki/Quickstart#dependencies) de Blacklight donne une bonne idée des outils et des versions de ce outils qui sont nécessaires pour une telle application. Pour l'instant, se contenter de suivre les instruction de la section "Dependencies".
+: le [quickstart](https://github.com/projectblacklight/blacklight/wiki/Quickstart#dependencies) de Blacklight donne une bonne idée des outils et des versions de ce outils qui sont nécessaires pour une telle application. Pour l'instant, se contenter de suivre les instruction de la section "Dependencies".
+
+À faire: poursuivre les informations d'installation
+
+### Configuration
+
+Les fichiers à modifier sont placés dans le dossier `blacklight` de ce dépôt, mais seulement les fichiers qui ont été modifiés. Ces *sources* ne sont donc pas automatiquement intégrées à l'application en service qui est installée dans un autre dossier.
+
+Un script `copy-bl.sh` permet de copier les fichiers *sources* dans le dossier de l'application en service.
+
 
 ## Conversion des notices MARC
 
@@ -72,6 +83,11 @@ Le fichier de configuration pour la conversion est `conversion/gingras_poc_confi
 
 traject
     -s json_writer.pretty_print=true
+    -s local.images_dir=/un/dossier/images
+    -s local.images_url=http://localhost:8183/iiif/3/
+    -s local.images_url_suffix=/full/max/0/default.jpg
+    -s local.thumbnails_url=http://localhost:8183/iiif/3
+    -s local.thumbnails_url_suffix=/full/1024,1024/0/default.jpg
     -w Traject::JsonWriter
     -o data/notices.json
     -c conversion/gingras_poc_config.rb
@@ -86,6 +102,11 @@ Pour réellement indexer les notices dans un `core` de Solr, utiliser cette comm
 traject
     -u http://localhost:8983/solr/blacklight-core
     -s solr_writer.commit_on_close=true
+    -s local.images_dir=/un/dossier/images
+    -s local.images_url=http://localhost:8183/iiif/3/
+    -s local.images_url_suffix=/full/max/0/default.jpg
+    -s local.thumbnails_url=http://localhost:8183/iiif/3
+    -s local.thumbnails_url_suffix=/full/1024,1024/0/default.jpg
     -c conversion/gingras_poc_config.rb
     data/gingras.mrc
 
