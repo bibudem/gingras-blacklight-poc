@@ -3,30 +3,23 @@
 
   <p class="lead">Catalogue du don Claude Gingras.</p>
 
-  <p>
-    <%= link_to 'Read the Documentation', 'https://github.com/projectblacklight/blacklight/wiki', class: 'btn btn-primary' %>
-    <%= link_to 'See Examples', 'http://projectblacklight.org', class: 'btn btn-secondary' %>
-  </p>
-</div>
+  <p>Il s'agit d'une preuve de concept pour illustrer ce qu'on peut faire
+      avec un ensemble de notices bibliographiques et de descriptions de dossiers
+      d'archives, dans une application de type "catalogue".</p>
 
-<div id="getting-started">
-  <h2>Here’s how to get started customizing your application:</h2>
-
-  <p>There are many ways to override specific behaviors and views in Blacklight. Because Blacklight is distributed as a Rails engine-based gem, all customization of Blacklight behavior should be done within your application by overriding Blacklight-provided behaviors with your own.</p>
+  <p>Les sources de cette application, et les instructions pour l'installer
+      sont disponibles surs <a href="https://github.com/bibudem/gingras-blacklight-poc">GitHub</a>.</p>
 
   <p>
-    <ol>
-      <li>To modify this text, you need to <a href="http://guides.rubyonrails.org/engines.html#improving-engine-functionality">override the Blacklight-provided view</a>.
-  You can copy this file, located in the blacklight gem: <br />
-  <%= Blacklight.root %>/app/views/catalog/_home_text.html.erb <br />
-  to your own application: <br />
-   <%= Rails.root %>/app/views/catalog/_home_text.html.erb
-      </li>
-      <li><a href="https://github.com/projectblacklight/blacklight/wiki/Indexing-your-data-into-solr">Index your own data</a> into Solr</li>
-      <li><a href="https://github.com/projectblacklight/blacklight/wiki#blacklight-configuration">Configure Blacklight</a> to match your data and user-experience needs</li>
-      <li><a href="https://github.com/projectblacklight/blacklight/wiki#support">Get in touch</a> with your comments, questions, and ideas</li>
-    </ol>
+    <a href="https://umontreal.ca">
+      <img style="margin-bottom: 45px;" width="153" height="60" src="https://bib.umontreal.ca/typo3conf/ext/udem_bootstrap/Resources/Public/udem-logo.svg"/>
+    </a>
+    <span>&nbsp;&nbsp;&nbsp;</span>
+    <a href="https://bib.umontreal.ca">
+      <img width="153" height="60" src="https://bib.umontreal.ca/typo3conf/ext/udem_bib/Resources/Public/Images/logo-bib.svg"/>
+    </a>
   </p>
+
 </div>
 
 <p>Blacklight <%= Blacklight::VERSION %></p>

@@ -46,6 +46,7 @@ class CatalogController < ApplicationController
 
     # solr field configuration for search results/index views
     config.index.title_field = 'title_tsim'
+
     # config.index.display_type_field = 'format'
     config.index.thumbnail_field = 'thumbnails_url_ssim'
 
@@ -69,7 +70,6 @@ class CatalogController < ApplicationController
     config.add_show_tools_partial(:email, callback: :email_action, validator: :validate_email_params)
     config.add_show_tools_partial(:sms, if: :render_sms_action?, callback: :sms_action, validator: :validate_sms_params)
     config.add_show_tools_partial(:citation)
-    #config.add_show_tools_partial(:thumbnail, component: Blacklight::Document::ThumbnailComponent, counter: :document_counter)
 
     config.add_nav_action(:bookmark, partial: 'blacklight/nav/bookmark', if: :render_bookmarks_control?)
     config.add_nav_action(:search_history, partial: 'blacklight/nav/search_history')
@@ -77,8 +77,8 @@ class CatalogController < ApplicationController
     # solr field configuration for document/show views
     # config.show.title_field = 'title_tsim'
     # config.show.display_type_field = 'format'
-    # config.show.thumbnail_field = 'thumbnail_path_ss'
     config.show.thumbnail_field = 'images_url_ssim'
+
     #
     # The presenter is a view-model class for the page
     # config.show.document_presenter_class = MyApp::ShowPresenter
@@ -112,30 +112,31 @@ class CatalogController < ApplicationController
     #  (useful when user clicks "more" on a large facet and wants to navigate alphabetically across a large set of results)
     # :index_range can be an array or range of prefixes that will be used to create the navigation (note: It is case sensitive when searching values)
 
+    # Les champs qui sont offerts en facettes
+
     config.add_facet_field 'format', label: 'Format'
-    config.add_facet_field 'pub_date_ssim', label: 'Année de publication', limit: true, single: true
-    config.add_facet_field 'subject_ssim', label: 'Sujet', limit: 20, index_range: 'A'..'Z'
-    config.add_facet_field 'language_ssim', label: 'Langue', limit: true
-    config.add_facet_field 'subject_geo_ssim', label: 'Region'
-    config.add_facet_field 'subject_era_ssim', label: 'Era'
-    config.add_facet_field 'music_form_ssim', label: 'Forme musicale', limit: true
-    config.add_facet_field 'interpret_ssim', label: 'Instrument et voix', limit: true
-    config.add_facet_field 'soliste_ssim', label: 'Soliste', limit: true
+    config.add_facet_field 'with_images_ssim', label: 'Avec images', limit: true
+    config.add_facet_field 'music_form_ssim', label: 'Forme musicale', limit: true, index_range: true
+    config.add_facet_field 'interpret_ssim', label: 'Instrument et voix', limit: true, index_range: true
+    config.add_facet_field 'soliste_ssim', label: 'Soliste', limit: true, index_range: true
+    config.add_facet_field 'author_composer_ssim', label: 'Compositeur', limit: true, index_range: true
+    config.add_facet_field 'author_interpret_ssim', label: 'Interprète', limit: true, index_range: true
     config.add_facet_field 'content_type_ssim', label: 'Type de contenu', limit: true
     config.add_facet_field 'media_type_ssim', label: 'Type de média', limit: true
     config.add_facet_field 'carrier_type_ssim', label: 'Type de support', limit: true
     config.add_facet_field 'physical_medium_ssim', label: 'Support matériel', limit: true
-    config.add_facet_field 'medium_performance_ssim', label: 'Distribution', limit: true
-    config.add_facet_field 'author_composer_ssim', label: 'Compositeur', limit: true
-    config.add_facet_field 'author_interpret_ssim', label: 'Interprète', limit: true
-    config.add_facet_field 'with_images_ssim', label: 'Avec images', limit: true
+    config.add_facet_field 'subject_ssim', label: 'Sujet', limit: true, index_range: true
+    config.add_facet_field 'subject_geo_ssim', label: 'Region', limit: true, index_range: true
+    config.add_facet_field 'language_ssim', label: 'Langue', limit: true, index_range: true
 
-    config.add_facet_field 'example_pivot_field', label: 'Pivot Field', pivot: ['format', 'language_ssim'], collapsing: true
+    config.add_facet_field 'example_pivot_field', label: 'Interprètes par instrument', pivot: ['interpret_ssim', 'author_interpret_ssim'], collapsing: true
 
-    config.add_facet_field 'example_query_facet_field', label: 'Publish Date', :query => {
-       :years_5 => { label: 'within 5 Years', fq: "pub_date_ssim:[#{Time.zone.now.year - 5 } TO *]" },
-       :years_10 => { label: 'within 10 Years', fq: "pub_date_ssim:[#{Time.zone.now.year - 10 } TO *]" },
-       :years_25 => { label: 'within 25 Years', fq: "pub_date_ssim:[#{Time.zone.now.year - 25 } TO *]" }
+    config.add_facet_field 'pub_date_ssim', label: 'Année de publication', limit: true, single: true
+    config.add_facet_field 'example_query_facet_field', label: 'Année de publication', :query => {
+       :years_5 => { label: '5 dernières années', fq: "pub_date_ssim:[#{Time.zone.now.year - 5 } TO *]" },
+       :years_10 => { label: '10 dernières années', fq: "pub_date_ssim:[#{Time.zone.now.year - 10 } TO *]" },
+       :years_25 => { label: '25 dernières années', fq: "pub_date_ssim:[#{Time.zone.now.year - 25 } TO *]" },
+       :years_old => { label: 'Plus de 25 années', fq: "pub_date_ssim:[* TO #{Time.zone.now.year - 25 }]" }
     }
 
 
@@ -146,34 +147,48 @@ class CatalogController < ApplicationController
 
     # solr fields to be displayed in the index (search results) view
     #   The ordering of the field names is the order of the display
-    config.add_index_field 'title_tsim', label: 'Titre'
-    config.add_index_field 'author_tsim', label: 'Auteur'
+    #config.add_index_field 'title_tsim', label: 'Titre'
+    config.add_index_field 'author_tsim', label: 'Créateur'
+    config.add_index_field 'pub_date_ssim', label: 'Année de publication'
     config.add_index_field 'format', label: 'Format'
-    config.add_index_field 'thumbnails_url_ssim', label: 'URL des vignettes'
-
-
-#    config.add_index_field 'title_tsim', label: 'Title'
-#    config.add_index_field 'title_vern_ssim', label: 'Title'
-#    config.add_index_field 'author_tsim', label: 'Author'
-#    config.add_index_field 'author_vern_ssim', label: 'Author'
-#    config.add_index_field 'format', label: 'Format'
-#    config.add_index_field 'language_ssim', label: 'Language'
-#    config.add_index_field 'published_ssim', label: 'Published'
-#    config.add_index_field 'published_vern_ssim', label: 'Published'
-#    config.add_index_field 'lc_callnum_ssim', label: 'Call number'
+    config.add_index_field 'material_type_ssm', label: 'Description matérielle'
 
     # solr fields to be displayed in the show (single result) view
     #   The ordering of the field names is the order of the display
-    config.add_show_field 'id', label: 'Numéro OCLC'
-    config.add_show_field 'format', label: 'Format'
-    config.add_show_field 'language_ssim', label: 'Langue'
+    config.add_show_field 'id', label: 'Identifiant'
+    config.add_show_field 'format', label: 'Format', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'language_ssim', label: 'Langue', link_to_facet: true,
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
     config.add_show_field 'isbn_tsim', label: 'ISBN'
     config.add_show_field 'publisher_number_ssim', label: 'Numéro d\'éditeur'
-    config.add_show_field 'music_form_ssim', label: 'Forme musicale'
-    config.add_show_field 'interpret_ssim', label: 'Instrument et voix'
-    config.add_show_field 'soliste_ssim', label: 'Soliste'
+    config.add_show_field 'music_form_ssim', label: 'Forme musicale', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'interpret_ssim', label: 'Instrument et voix', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'soliste_ssim', label: 'Soliste', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
     config.add_show_field 'lc_callnum_ssm', label: 'Cote'
-    config.add_show_field 'title_tsim', label: 'Titre'
     config.add_show_field 'title_uniform_tsim', label: 'Titre uniforme'
     config.add_show_field 'title_addl_tsim', label: 'Titre additionnel'
     config.add_show_field 'edition_ssm', label: 'Édition'
@@ -183,42 +198,195 @@ class CatalogController < ApplicationController
     config.add_show_field 'collection_tsim', label: 'Collection'
     config.add_show_field 'material_type_ssm', label: 'Description matérielle'
     config.add_show_field 'duration_ssm', label: 'Durée'
-    config.add_show_field 'content_type_ssm', label: 'Type de contenu'
-    config.add_show_field 'media_type_ssm', label: 'Type de média'
-    config.add_show_field 'carrier_type_ssm', label: 'Type de support'
-    config.add_show_field 'physical_medium_ssm', label: 'Support matériel'
-    config.add_show_field 'sound_characteristics_ssm', label: 'Caractéristique sonore'
-    config.add_show_field 'video_characteristics_ssm', label: 'Cractéristique vidéo'
-    config.add_show_field 'file_characteristics_ssm', label: 'Caractéristique du fichier numérique'
-    config.add_show_field 'notated_music_characteristics_ssm', label: 'Caractéristique de la musique notée'
-    config.add_show_field 'medium_performance_ssm', label: 'Distribution'
+    config.add_show_field 'content_type_ssm', label: 'Type de contenu', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'media_type_ssm', label: 'Type de média', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'carrier_type_ssm', label: 'Type de support', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'physical_medium_ssm', label: 'Support matériel', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'sound_characteristics_ssm', label: 'Caractéristique sonore', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'video_characteristics_ssm', label: 'Cractéristique vidéo', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'file_characteristics_ssm', label: 'Caractéristique du fichier numérique', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'notated_music_characteristics_ssm', label: 'Caractéristique de la musique notée', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
+    config.add_show_field 'medium_performance_ssm', label: 'Distribution', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
     config.add_show_field 'numeric_designation_ssm', label: 'Numéro d\'identification'
-    config.add_show_field 'key_ssm', label: 'Tonalité'
+    config.add_show_field 'key_ssm', label: 'Tonalité', link_to_facet: true,
+    separator_options: {
+      two_words_connector: '<br />',
+      words_connector: '<br />',
+      last_word_connector: '<br />'
+    }
     config.add_show_field 'creator_characteristics_ssm', label: 'Caractéristique du créateur'
     config.add_show_field 'title_series_ssim', label: 'Titre du périodique'
-    config.add_show_field 'author_tsim', label: 'Auteur'
-    config.add_show_field 'author_addl_tsim', label: 'Autre créateur'
-    config.add_show_field 'author_composer_ssim', label: 'Compositeur'
-    config.add_show_field 'author_interpret_ssim', label: 'Interprète'
-    config.add_show_field 'subject_ssim', label: 'Sujet'
-    config.add_show_field 'subject_person_ssim', label: 'Nom de personne'
-    config.add_show_field 'subject_collect_ssim', label: 'Collectivité'
-    config.add_show_field 'subject_meeting_ssim', label: 'Réunion'
-    config.add_show_field 'subject_title_ssim', label: 'Titre uniforme'
-    config.add_show_field 'subject_event_ssim', label: 'Événement'
-    config.add_show_field 'subject_chrono_ssim', label: 'Terme chronologique'
-    config.add_show_field 'subject_name_ssim', label: 'Nom commun'
-    config.add_show_field 'subject_geo_ssim', label: 'Lieu géographique'
-    config.add_show_field 'subject_genre_ssim', label: 'Genre ou forme'
-    config.add_show_field 'subject_local_ssim', label: 'Autre sujet'
-    config.add_show_field 'notes_ssim', label: 'Notes'
-    config.add_show_field 'pieces_ssm', label: 'Pièces'
-    config.add_show_field 'fonds_ssm', label: 'Provenance'
-    config.add_show_field 'collection_ssm', label: 'Collection'
-    config.add_show_field 'link_ssm', label: 'Lien'
-    config.add_show_field 'url_ssm', label: 'URL'
-    config.add_show_field 'with_images_ssim', label: 'Images'
-    config.add_show_field 'images_url_ssim', label: 'URL des images'
+    config.add_show_field 'author_tsim', label: 'Auteur',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'author_addl_tsim', label: 'Autre créateur',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'author_composer_ssim', label: 'Compositeur', link_to_facet: true,
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'author_interpret_ssim', label: 'Interprète', link_to_facet: true,
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_ssim', label: 'Sujet', link_to_facet: true,
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_person_ssim', label: 'Nom de personne',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_collect_ssim', label: 'Collectivité',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_meeting_ssim', label: 'Réunion',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_title_ssim', label: 'Titre uniforme',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_event_ssim', label: 'Événement',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_chrono_ssim', label: 'Terme chronologique',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_name_ssim', label: 'Nom commun',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_geo_ssim', label: 'Lieu géographique', link_to_facet: true,
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_genre_ssim', label: 'Genre ou forme',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'subject_local_ssim', label: 'Autre sujet',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'notes_ssim', label: 'Notes',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'pieces_ssm', label: 'Pièces',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'fonds_ssm', label: 'Provenance',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'collection_ssm', label: 'Collection',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'link_ssm', label: 'Lien',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
+    config.add_show_field 'url_ssm', label: 'URL',
+      separator_options: {
+        two_words_connector: '<br />',
+        words_connector: '<br />',
+        last_word_connector: '<br />'
+      }
 
 
 
@@ -292,7 +460,7 @@ class CatalogController < ApplicationController
     # solr request handler? The one set in config[:default_solr_parameters][:qt],
     # since we aren't specifying it otherwise.
 
-    config.add_search_field 'all_fields', label: 'All Fields'
+    config.add_search_field 'all_fields', label: 'Tous les champs'
 
 
     # Now we see how to over-ride Solr request handler defaults, in this
